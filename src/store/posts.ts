@@ -8,19 +8,34 @@ interface PostsState {
     all: Map<string, Post>,
     selectedPeriod: Period
 }
+
+function delay() {
+    return new Promise<void>(res => setTimeout(res, 1500))
+}
+
 export const usePost = defineStore("posts", {
     state: (): PostsState => ({
-        ids: [today.id, thisWeek.id, thisMonth.id],
-        all: new Map([
-            [today.id, today],
-            [thisWeek.id, thisWeek],
-            [thisMonth.id, thisMonth]
-        ]),
+        ids: [],
+        all: new Map(),
         selectedPeriod: "Today"
     }),
     actions: {
         setSelectedPeriod(period: Period) {
             this.selectedPeriod = period
+        },
+        async fetchPosts() {
+            const res = await window.fetch("http://localhost:8000/posts")
+            const data = (await res.json()) as Post[]
+            await delay()
+
+            let ids: string[] = []
+            let all = new Map<string, Post>()
+            for (const post of data) {
+                ids.push(post.id)
+                all.set(post.id, post)
+            }
+            this.ids = ids
+            this.all = all
         }
     },
     getters: {

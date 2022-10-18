@@ -4,6 +4,7 @@ import {usePost} from "../store/posts";
 import {periods} from "../constants";
 
 const postStore = usePost()
+postStore.fetchPosts()
 </script>
 
 <template>
