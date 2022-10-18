@@ -1,54 +1,13 @@
-// import {reactive, readonly} from "vue";
-//
-// interface PostState {
-//     foo: string
-// }
-
-//
-// export class PostStore {
-//     #state: PostState
-//
-//     constructor() {
-//         this.#state = reactive<PostState>({
-//             foo: 'foo'
-//         })
-//     }
-//     getState(){
-//         return readonly(this.#state)
-//     }
-//     updateFoo (foo: string){
-//         this.#state.foo = foo
-//     }
-// }
-//
-// const store = new PostStore()
-// export  function usePost(){
-//    return  store
-// }
-
 import {defineStore} from 'pinia'
-import {Post, thisMonth, thisWeek, today} from "../posts";
-
-// interface PostState {
-//     foo: string
-// }
-//
-// export const usePost = defineStore('posts', {
-//     state: (): PostState => ({
-//         foo: 'foo'
-//     }),
-//     actions: {
-//         updateFoo(foo: string) {
-//             this.foo = foo
-//         }
-//     }
-// })
+import {TimelinePost, Post, thisMonth, thisWeek, today} from "../posts";
+import {Period} from "../constants";
+import {DateTime} from "luxon";
 
 interface PostsState {
     ids: string[],
-    all: Map<string, Post>
+    all: Map<string, Post>,
+    selectedPeriod: Period
 }
-
 export const usePost = defineStore("posts", {
     state: (): PostsState => ({
         ids: [today.id, thisWeek.id, thisMonth.id],
@@ -56,6 +15,35 @@ export const usePost = defineStore("posts", {
             [today.id, today],
             [thisWeek.id, thisWeek],
             [thisMonth.id, thisMonth]
-        ])
-    })
+        ]),
+        selectedPeriod: "Today"
+    }),
+    actions: {
+        setSelectedPeriod(period: Period) {
+            this.selectedPeriod = period
+        }
+    },
+    getters: {
+        filterPosts: (state): TimelinePost[] => {
+            return state.ids
+                .map(id => {
+                    const post = state.all.get(id)
+                    if (!post) {
+                        throw  Error("not found")
+                    }
+                    return {
+                        ...post, created: DateTime.fromISO(post.created)
+                    }
+                })
+                .filter(post => {
+                    if (state.selectedPeriod === "Today") {
+                        return post.created >= DateTime.now().minus({day: 1})
+                    }
+                    if (state.selectedPeriod === "This week") {
+                        return post.created >= DateTime.now().minus({week: 1})
+                    }
+                    return post
+                })
+        }
+    }
 })
