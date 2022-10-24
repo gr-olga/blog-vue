@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import {TimelinePost} from "../posts";
 
-defineProps<{
-  post: TimelinePost
-}>()
+defineProps<{ post: TimelinePost }>()
 </script>
 
 <template>
